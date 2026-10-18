@@ -57,15 +57,22 @@ function parseCSV(text) {
 async function loadSheetData() {
   console.log("[Sheets API] Initiating data load...");
 
-  // Primary: Apps Script JSON
   if (SHEETS_CONFIG.appsScriptUrl) {
     try {
       console.log("[Sheets API] Fetching from Apps Script Web App...");
       const response = await fetch(SHEETS_CONFIG.appsScriptUrl, { redirect: "follow" });
       if (response.ok) {
         const jsonData = await response.json();
-        hexDataCache = jsonData;
+
+        if (jsonData.hexes) {
+          hexDataCache = jsonData.hexes;
+          playerNotesCache = jsonData.playerNotes || {};
+        } else {
+          hexDataCache = jsonData;
+        }
+
         console.log("Successfully cached Google Sheets hex data:", Object.keys(hexDataCache).length, "hexes");
+        console.log("Successfully cached player notes:", Object.keys(playerNotesCache).length, "notes");
         return hexDataCache;
       }
     } catch (err) {
@@ -73,14 +80,13 @@ async function loadSheetData() {
     }
   }
 
-  // Fallback: CSV export stream
+  // Fallback: CSV stream
   try {
-    console.log("[Sheets API] Fetching CSV stream...");
     const response = await fetch(SHEETS_CONFIG.publishedCsvUrl);
     const csvText = await response.text();
 
     if (csvText.trim().startsWith("<!DOCTYPE") || csvText.trim().startsWith("<html")) {
-      console.error("[Sheets API Error] Google returned HTML. Ensure sheet is set to 'Anyone with the link'!");
+      console.error("[Sheets API Error] Check sheet permissions.");
       return hexDataCache;
     }
 
@@ -99,7 +105,6 @@ async function loadSheetData() {
         };
       }
     }
-    console.log("Successfully cached Google Sheets hex data via CSV fallback:", Object.keys(hexDataCache).length, "hexes");
     return hexDataCache;
 
   } catch (error) {
@@ -167,5 +172,5 @@ async function apiUpdateHexStatus(hexId, newStatus) {
   }
 }
 
-// Auto-run loadSheetData as soon as script executes
+// Execute auto-fetch
 loadSheetData();
