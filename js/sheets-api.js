@@ -55,12 +55,14 @@ function parseCSV(text) {
 }
 
 async function loadSheetData() {
-  console.log("[Sheets API] Initiating data load...");
+  console.log("[Sheets API] Initiating fresh data load...");
 
   if (SHEETS_CONFIG.appsScriptUrl) {
     try {
-      console.log("[Sheets API] Fetching from Apps Script Web App...");
-      const response = await fetch(SHEETS_CONFIG.appsScriptUrl, { redirect: "follow" });
+      const cacheBustUrl = `${SHEETS_CONFIG.appsScriptUrl}?t=${Date.now()}`;
+      console.log("[Sheets API] Fetching live data from Apps Script...");
+      
+      const response = await fetch(cacheBustUrl, { redirect: "follow" });
       if (response.ok) {
         const jsonData = await response.json();
 
@@ -71,8 +73,8 @@ async function loadSheetData() {
           hexDataCache = jsonData;
         }
 
-        console.log("Successfully cached Google Sheets hex data:", Object.keys(hexDataCache).length, "hexes");
-        console.log("Successfully cached player notes:", Object.keys(playerNotesCache).length, "notes");
+        console.log("[Sheets API] Hexes cached:", Object.keys(hexDataCache).length);
+        console.log("[Sheets API] Player notes cached:", playerNotesCache);
         return hexDataCache;
       }
     } catch (err) {
@@ -95,7 +97,7 @@ async function loadSheetData() {
       for (let c = 0; c < rows[r].length && c < GRID_CONFIG.cols; c++) {
         const colLabel = getColumnLabel(c);
         const rowLabel = r + 1;
-        const hexId = `${colLabel}${rowLabel}`;
+        const hexId = `${colLabel}${rowLabel}`.toUpperCase();
         const rawContent = rows[r][c] || "";
 
         hexDataCache[hexId] = {
@@ -114,7 +116,8 @@ async function loadSheetData() {
 }
 
 async function apiSavePlayerNote(hexId, noteText) {
-  playerNotesCache[hexId] = noteText;
+  const cleanHexId = String(hexId).toUpperCase();
+  playerNotesCache[cleanHexId] = noteText;
 
   if (!SHEETS_CONFIG.appsScriptUrl) {
     return { success: true, offline: true };
@@ -123,28 +126,31 @@ async function apiSavePlayerNote(hexId, noteText) {
   try {
     const payload = JSON.stringify({
       action: "saveNote",
-      hexId: hexId,
+      hexId: cleanHexId,
       note: noteText,
       timestamp: new Date().toISOString()
     });
 
+    // Uses text/plain to prevent browser preflight CORS blocks
     await fetch(SHEETS_CONFIG.appsScriptUrl, {
       method: "POST",
       mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain" },
       body: payload
     });
 
+    console.log(`[Sheets API] Sent note for ${cleanHexId} to Google Sheets.`);
     return { success: true };
   } catch (error) {
-    console.error(`Error saving note for ${hexId}:`, error);
+    console.error(`[Sheets API Error] Saving note for ${cleanHexId}:`, error);
     return { success: false, error };
   }
 }
 
 async function apiUpdateHexStatus(hexId, newStatus) {
-  if (hexDataCache[hexId]) {
-    hexDataCache[hexId].status = newStatus;
+  const cleanHexId = String(hexId).toUpperCase();
+  if (hexDataCache[cleanHexId]) {
+    hexDataCache[cleanHexId].status = newStatus;
   }
 
   if (!SHEETS_CONFIG.appsScriptUrl) {
@@ -154,23 +160,24 @@ async function apiUpdateHexStatus(hexId, newStatus) {
   try {
     const payload = JSON.stringify({
       action: "updateStatus",
-      hexId: hexId,
+      hexId: cleanHexId,
       status: newStatus
     });
 
     await fetch(SHEETS_CONFIG.appsScriptUrl, {
       method: "POST",
       mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain" },
       body: payload
     });
 
+    console.log(`[Sheets API] Sent status update for ${cleanHexId} to Google Sheets.`);
     return { success: true };
   } catch (error) {
-    console.error(`Error updating status for ${hexId}:`, error);
+    console.error(`[Sheets API Error] Updating status for ${cleanHexId}:`, error);
     return { success: false, error };
   }
 }
 
-// Execute auto-fetch
+// Auto-run loadSheetData on script load
 loadSheetData();
