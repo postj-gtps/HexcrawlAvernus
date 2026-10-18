@@ -33,11 +33,9 @@ function setupGmToggle() {
 
   btnGmToggle.addEventListener("click", () => {
     if (isGMModeActive) {
-      // Exit GM Mode directly
       isGMModeActive = false;
       updateGmUiState();
     } else {
-      // Prompt for PIN to enter GM Mode
       pinInput.value = "";
       pinError.classList.add("hidden");
       pinModal.classList.remove("hidden");
@@ -86,7 +84,7 @@ function updateGmUiState() {
     lockText.textContent = "Enter GM Mode";
   }
 
-  // Refresh sidebar content if a hex is selected
+  // Refresh sidebar display if a hex is selected
   if (currentSelectedHexId) {
     window.handleHexClick(currentSelectedHexId);
   }
@@ -110,12 +108,13 @@ window.handleHexClick = function(hexId) {
   const currentStatus = hexData.status || "Unknown";
 
   let htmlContent = `
-    <h2 class="hex-title">Hex ${hexId} ${isGMModeActive ? "(GM)" : ""}</h2>
+    <h2 class="hex-title">Hex ${hexId} ${isGMModeActive ? "(GM View)" : ""}</h2>
     <span class="status-badge status-${currentStatus.toLowerCase()}">Status: ${currentStatus}</span>
   `;
 
   if (isGMModeActive) {
     // --- GM SIDEBAR INTERFACE ---
+    // Includes GM Status Controls, Master Key Lore from Sheets, and Party Notes
     htmlContent += `
       <div class="gm-controls">
         <label><strong>GM Status Override:</strong></label>
@@ -129,40 +128,31 @@ window.handleHexClick = function(hexId) {
       <hr class="modal-divider">
       <div class="gm-master-lore">
         <h3 class="section-title">Master Lore / Encounter Notes</h3>
-        <div class="lore-box">${formatLoreText(hexData.content || hexData.Description || "No master entry for this hex.")}</div>
+        <div class="lore-box">${formatLoreText(hexData.content || "No master entry for this hex.")}</div>
+      </div>
+      <hr class="modal-divider">
+      <div class="player-journal-section">
+        <h3 class="section-title">Party Travel Journal (Shared)</h3>
+        <textarea id="player-journal-input" placeholder="Type notes, NPCs met, or loot found here...">${playerNote}</textarea>
+        <button id="btn-save-journal" class="btn-secondary">Save Journal Note</button>
+        <span id="journal-save-status" class="save-status-msg"></span>
       </div>
     `;
   } else {
     // --- PLAYER SIDEBAR INTERFACE ---
-    if (currentStatus === "Unknown") {
-      htmlContent += `<p class="info-text">Unexplored territory. No rumors or details recorded.</p>`;
-    } else if (currentStatus === "Rumored") {
-      htmlContent += `
-        <div class="player-lore">
-          <h3 class="section-title">Rumors & Intelligence</h3>
-          <p>${formatLoreText(hexData.content || hexData.Description || "Vague rumors circulate about this location...")}</p>
-        </div>
-      `;
-    } else {
-      htmlContent += `
-        <div class="player-lore">
-          <h3 class="section-title">Location Discoveries</h3>
-          <p>${formatLoreText(hexData.content || hexData.Description || "Explored location.")}</p>
-        </div>
-      `;
-    }
+    // Strictly hides Master Lore. Displays party journal for reading/writing notes.
+    htmlContent += `
+      <div class="player-journal-section">
+        <h3 class="section-title">Party Travel Journal</h3>
+        <p class="info-text" style="font-size: 0.85rem; color: #aaa; margin-bottom: 12px;">
+          Record party discoveries, rumors, NPCs met, or encounters for Hex ${hexId}.
+        </p>
+        <textarea id="player-journal-input" placeholder="Type notes, rumors, or discoveries here...">${playerNote}</textarea>
+        <button id="btn-save-journal" class="btn-secondary">Save Journal Note</button>
+        <span id="journal-save-status" class="save-status-msg"></span>
+      </div>
+    `;
   }
-
-  // --- SHARED PLAYER JOURNAL ---
-  htmlContent += `
-    <hr class="modal-divider">
-    <div class="player-journal-section">
-      <h3 class="section-title">Party Travel Journal</h3>
-      <textarea id="player-journal-input" placeholder="Type notes, NPCs met, or loot found here...">${playerNote}</textarea>
-      <button id="btn-save-journal" class="btn-secondary">Save Journal Note</button>
-      <span id="journal-save-status" class="save-status-msg"></span>
-    </div>
-  `;
 
   sidebarContent.innerHTML = htmlContent;
   attachSidebarEventListeners(hexId);
@@ -182,7 +172,6 @@ function attachSidebarEventListeners(hexId) {
       btnSaveStatus.disabled = false;
       btnSaveStatus.textContent = "Updated!";
       
-      // Refresh sidebar display
       window.handleHexClick(hexId);
     });
   }
