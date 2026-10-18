@@ -103,47 +103,43 @@ window.handleHexClick = function(rawHexId) {
   let htmlContent = `
     <h2 class="hex-title">Hex ${cleanHexId} ${isGMModeActive ? "(GM View)" : ""}</h2>
     <span class="status-badge status-${currentStatus.toLowerCase()}">Status: ${currentStatus}</span>
+
+    <!-- Location Status Selector (Accessible to Players & GM) -->
+    <div class="gm-controls">
+      <label><strong>Location Status:</strong></label>
+      <select id="hex-status-select">
+        <option value="Unknown" ${currentStatus === "Unknown" ? "selected" : ""}>0: Unknown</option>
+        <option value="Rumored" ${currentStatus === "Rumored" ? "selected" : ""}>1: Rumored</option>
+        <option value="Visited" ${currentStatus === "Visited" ? "selected" : ""}>2: Visited</option>
+      </select>
+      <button id="btn-save-status" class="btn-primary">Update Status</button>
+    </div>
   `;
 
   if (isGMModeActive) {
-    // --- GM SIDEBAR INTERFACE ---
+    // --- GM MASTER LORE SECTION ---
     htmlContent += `
-      <div class="gm-controls">
-        <label><strong>GM Status Override:</strong></label>
-        <select id="gm-status-select">
-          <option value="Unknown" ${currentStatus === "Unknown" ? "selected" : ""}>0: Unknown</option>
-          <option value="Rumored" ${currentStatus === "Rumored" ? "selected" : ""}>1: Rumored</option>
-          <option value="Visited" ${currentStatus === "Visited" ? "selected" : ""}>2: Visited</option>
-        </select>
-        <button id="btn-save-status" class="btn-primary">Update Status</button>
-      </div>
       <hr class="modal-divider">
       <div class="gm-master-lore">
         <h3 class="section-title">Master Lore / Encounter Notes</h3>
         <div class="lore-box">${formatLoreText(hexData.content || "No master entry for this hex.")}</div>
       </div>
-      <hr class="modal-divider">
-      <div class="player-journal-section">
-        <h3 class="section-title">Party Travel Journal (Shared)</h3>
-        <textarea id="player-journal-input" placeholder="Type notes, NPCs met, or loot found here...">${playerNote}</textarea>
-        <button id="btn-save-journal" class="btn-secondary">Save Journal Note</button>
-        <span id="journal-save-status" class="save-status-msg"></span>
-      </div>
-    `;
-  } else {
-    // --- PLAYER SIDEBAR INTERFACE ---
-    htmlContent += `
-      <div class="player-journal-section">
-        <h3 class="section-title">Party Travel Journal</h3>
-        <p class="info-text" style="font-size: 0.85rem; color: #aaa; margin-bottom: 12px;">
-          Record party discoveries, rumors, NPCs met, or encounters for Hex ${cleanHexId}.
-        </p>
-        <textarea id="player-journal-input" placeholder="Type notes, rumors, or discoveries here...">${playerNote}</textarea>
-        <button id="btn-save-journal" class="btn-secondary">Save Journal Note</button>
-        <span id="journal-save-status" class="save-status-msg"></span>
-      </div>
     `;
   }
+
+  // --- SHARED PARTY JOURNAL SECTION ---
+  htmlContent += `
+    <hr class="modal-divider">
+    <div class="player-journal-section">
+      <h3 class="section-title">Party Travel Journal</h3>
+      <p class="info-text" style="font-size: 0.85rem; color: #aaa; margin-bottom: 12px;">
+        Record party discoveries, rumors, NPCs met, or encounters for Hex ${cleanHexId}.
+      </p>
+      <textarea id="player-journal-input" placeholder="Type notes, rumors, or discoveries here...">${playerNote}</textarea>
+      <button id="btn-save-journal" class="btn-secondary">Save Journal Note</button>
+      <span id="journal-save-status" class="save-status-msg"></span>
+    </div>
+  `;
 
   sidebarContent.innerHTML = htmlContent;
   attachSidebarEventListeners(cleanHexId);
@@ -153,7 +149,7 @@ function attachSidebarEventListeners(hexId) {
   const btnSaveStatus = document.getElementById("btn-save-status");
   if (btnSaveStatus) {
     btnSaveStatus.addEventListener("click", async () => {
-      const select = document.getElementById("gm-status-select");
+      const select = document.getElementById("hex-status-select");
       const newStatus = select.value;
       btnSaveStatus.disabled = true;
       btnSaveStatus.textContent = "Updating...";
