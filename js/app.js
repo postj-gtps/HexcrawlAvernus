@@ -1,10 +1,95 @@
 /**
- * Application Controller & Modal Content Renderer
+ * Application Controller & Sidebar Renderer
  */
 
-function isGMMode() {
+const GM_PIN = "0326";
+let isGMModeActive = false;
+let currentSelectedHexId = null;
+
+// Initialize app controls
+function initApp() {
+  setupGmToggle();
+  
+  // Check if GM mode was requested via URL parameter
   const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get("view") === "gm";
+  if (urlParams.get("view") === "gm") {
+    isGMModeActive = true;
+    updateGmUiState();
+  }
+}
+
+/**
+ * Configure GM PIN Lock Button & Modal Logic
+ */
+function setupGmToggle() {
+  const btnGmToggle = document.getElementById("btn-gm-toggle");
+  const pinModal = document.getElementById("pin-modal");
+  const pinInput = document.getElementById("pin-input");
+  const pinError = document.getElementById("pin-error");
+  const btnPinSubmit = document.getElementById("btn-pin-submit");
+  const btnPinCancel = document.getElementById("btn-pin-cancel");
+
+  if (!btnGmToggle) return;
+
+  btnGmToggle.addEventListener("click", () => {
+    if (isGMModeActive) {
+      // Exit GM Mode directly
+      isGMModeActive = false;
+      updateGmUiState();
+    } else {
+      // Prompt for PIN to enter GM Mode
+      pinInput.value = "";
+      pinError.classList.add("hidden");
+      pinModal.classList.remove("hidden");
+      pinInput.focus();
+    }
+  });
+
+  btnPinSubmit.addEventListener("click", () => verifyPin());
+
+  pinInput.addEventListener("keyup", (e) => {
+    if (e.key === "Enter") verifyPin();
+  });
+
+  btnPinCancel.addEventListener("click", () => {
+    pinModal.classList.add("hidden");
+  });
+
+  function verifyPin() {
+    if (pinInput.value.trim() === GM_PIN) {
+      isGMModeActive = true;
+      pinModal.classList.add("hidden");
+      updateGmUiState();
+    } else {
+      pinError.classList.remove("hidden");
+      pinInput.value = "";
+      pinInput.focus();
+    }
+  }
+}
+
+/**
+ * Updates UI styling based on current GM status
+ */
+function updateGmUiState() {
+  const btnGmToggle = document.getElementById("btn-gm-toggle");
+  const lockIcon = document.getElementById("gm-lock-icon");
+  const lockText = document.getElementById("gm-lock-text");
+
+  if (isGMModeActive) {
+    btnGmToggle.classList.add("active-gm");
+    lockIcon.textContent = "🔓";
+    lockText.textContent = "GM Mode Active (Exit)";
+  } else {
+    btnGmToggle.classList.remove("active-gm");
+    lockIcon.textContent = "🔒";
+    lockText.textContent = "Enter GM Mode";
+  }
+
+  // Refresh sidebar content if a hex is selected
+  if (currentSelectedHexId) {
+    window.handleHexClick(currentSelectedHexId);
+  }
 }
 
 function formatLoreText(text) {
@@ -12,30 +97,25 @@ function formatLoreText(text) {
   return text.replace(/\n/g, "<br>");
 }
 
-// Explicit global modal trigger function
-window.handleHexClick = function(hexId, col, row) {
-  console.log(`[App] Interacting with Hex ${hexId} (Col: ${col}, Row: ${row})`);
+/**
+ * Render selected Hex details inside the sidebar
+ */
+window.handleHexClick = function(hexId) {
+  currentSelectedHexId = hexId;
+  const sidebarContent = document.getElementById("sidebar-content");
+  if (!sidebarContent) return;
 
-  const modal = document.getElementById("hex-modal");
-  const modalTitle = document.getElementById("modal-hex-id");
-  const modalBody = document.getElementById("modal-content-details");
-  const modalStatus = document.getElementById("modal-status");
-
-  const isGM = isGMMode();
   const hexData = hexDataCache[hexId] || { content: "", status: "Unknown" };
   const playerNote = playerNotesCache[hexId] || "";
-
-  if (modalTitle) modalTitle.textContent = `Hex ${hexId} ${isGM ? "(GM View)" : ""}`;
-
   const currentStatus = hexData.status || "Unknown";
-  if (modalStatus) {
-    modalStatus.textContent = `Status: ${currentStatus}`;
-    modalStatus.className = `status-badge status-${currentStatus.toLowerCase()}`;
-  }
 
-  let htmlContent = "";
+  let htmlContent = `
+    <h2 class="hex-title">Hex ${hexId} ${isGMModeActive ? "(GM)" : ""}</h2>
+    <span class="status-badge status-${currentStatus.toLowerCase()}">Status: ${currentStatus}</span>
+  `;
 
-  if (isGM) {
+  if (isGMModeActive) {
+    // --- GM SIDEBAR INTERFACE ---
     htmlContent += `
       <div class="gm-controls">
         <label><strong>GM Status Override:</strong></label>
@@ -48,47 +128,47 @@ window.handleHexClick = function(hexId, col, row) {
       </div>
       <hr class="modal-divider">
       <div class="gm-master-lore">
-        <h3>Master Lore / Encounter Notes</h3>
+        <h3 class="section-title">Master Lore / Encounter Notes</h3>
         <div class="lore-box">${formatLoreText(hexData.content || hexData.Description || "No master entry for this hex.")}</div>
       </div>
     `;
   } else {
+    // --- PLAYER SIDEBAR INTERFACE ---
     if (currentStatus === "Unknown") {
       htmlContent += `<p class="info-text">Unexplored territory. No rumors or details recorded.</p>`;
     } else if (currentStatus === "Rumored") {
       htmlContent += `
         <div class="player-lore">
-          <h3>Rumors & Intelligence</h3>
+          <h3 class="section-title">Rumors & Intelligence</h3>
           <p>${formatLoreText(hexData.content || hexData.Description || "Vague rumors circulate about this location...")}</p>
         </div>
       `;
     } else {
       htmlContent += `
         <div class="player-lore">
-          <h3>Location Discoveries</h3>
+          <h3 class="section-title">Location Discoveries</h3>
           <p>${formatLoreText(hexData.content || hexData.Description || "Explored location.")}</p>
         </div>
       `;
     }
   }
 
+  // --- SHARED PLAYER JOURNAL ---
   htmlContent += `
     <hr class="modal-divider">
     <div class="player-journal-section">
-      <h3>Party Travel Journal</h3>
+      <h3 class="section-title">Party Travel Journal</h3>
       <textarea id="player-journal-input" placeholder="Type notes, NPCs met, or loot found here...">${playerNote}</textarea>
       <button id="btn-save-journal" class="btn-secondary">Save Journal Note</button>
       <span id="journal-save-status" class="save-status-msg"></span>
     </div>
   `;
 
-  if (modalBody) modalBody.innerHTML = htmlContent;
-  if (modal) modal.classList.remove("hidden");
-
-  attachModalEventListeners(hexId);
+  sidebarContent.innerHTML = htmlContent;
+  attachSidebarEventListeners(hexId);
 };
 
-function attachModalEventListeners(hexId) {
+function attachSidebarEventListeners(hexId) {
   const btnSaveStatus = document.getElementById("btn-save-status");
   if (btnSaveStatus) {
     btnSaveStatus.addEventListener("click", async () => {
@@ -102,11 +182,8 @@ function attachModalEventListeners(hexId) {
       btnSaveStatus.disabled = false;
       btnSaveStatus.textContent = "Updated!";
       
-      const modalStatus = document.getElementById("modal-status");
-      if (modalStatus) {
-        modalStatus.textContent = `Status: ${newStatus}`;
-        modalStatus.className = `status-badge status-${newStatus.toLowerCase()}`;
-      }
+      // Refresh sidebar display
+      window.handleHexClick(hexId);
     });
   }
 
@@ -129,4 +206,11 @@ function attachModalEventListeners(hexId) {
       }
     });
   }
+}
+
+// Initialize on DOM load
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
 }

@@ -5,22 +5,34 @@
 }
 
 body {
-  background-color: #121212;
+  background-color: #0d0d0d;
   color: #e0e0e0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  overflow-x: hidden;
+  overflow: hidden; /* Prevent window scrollbars */
+  height: 100vh;
 }
 
-/* Map Viewport & Container */
+/* Master Layout: Map Left, Sidebar Right */
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Map Viewport & Container (Left Side) */
 .map-viewport {
   position: relative;
-  display: inline-block;
-  margin: 0 auto;
+  flex: 1;
+  overflow: auto; /* Allows panning around large map image */
+  background: #050505;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 #map-image {
   display: block;
-  max-width: 100%;
+  max-width: none; /* Keep natural resolution for high-detail map */
   height: auto;
   user-select: none;
 }
@@ -31,23 +43,23 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none; /* Let pointer events fall through to polygons */
+  pointer-events: none;
 }
 
 /* SVG Hex Shapes */
 polygon.hex-cell {
   pointer-events: auto;
-  fill: rgba(0, 0, 0, 0.01); /* Nearly transparent, required for click handling */
-  stroke: #000000;           /* Default black stroke */
+  fill: rgba(0, 0, 0, 0.01);
+  stroke: #000000;
   stroke-opacity: 0.75;
   stroke-width: 1.5px;
   cursor: pointer;
-  transition: fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease, stroke-opacity 0.15s ease;
+  transition: fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
 }
 
 polygon.hex-cell:hover {
-  fill: rgba(255, 215, 0, 0.35); /* Vivid gold highlight on hover */
-  stroke: #ffd700 !important;   /* Bright gold border on hover */
+  fill: rgba(255, 215, 0, 0.35);
+  stroke: #ffd700 !important;
   stroke-opacity: 1 !important;
   stroke-width: 2.5px !important;
 }
@@ -60,12 +72,183 @@ polygon.hex-cell.hidden-border {
   stroke-opacity: 0;
 }
 
-/* Calibration Control Panel (Hidden by default, shown when .visible class is present) */
+/* Right-Side Command Sidebar */
+.sidebar-panel {
+  width: 380px;
+  min-width: 340px;
+  background: #161616;
+  border-left: 2px solid #2a2a2a;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.sidebar-header {
+  padding: 16px;
+  background: #1c1c1c;
+  border-bottom: 1px solid #2d2d2d;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-header h2 {
+  font-size: 1.2rem;
+  color: #f1c40f;
+  letter-spacing: 0.5px;
+}
+
+/* GM Lock Toggle Button */
+.btn-gm-lock {
+  width: 100%;
+  padding: 10px;
+  background: #262626;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #ccc;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-gm-lock:hover {
+  background: #333;
+  border-color: #f1c40f;
+  color: #fff;
+}
+
+.btn-gm-lock.active-gm {
+  background: #8e44ad;
+  border-color: #9b59b6;
+  color: #ffffff;
+}
+
+.sidebar-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.placeholder-notice {
+  text-align: center;
+  color: #888;
+  margin-top: 40px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Hex Details & Journal Formatting */
+.hex-title {
+  font-size: 1.4rem;
+  color: #ffffff;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 6px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  background: #333;
+  color: #aaa;
+}
+
+.status-badge.status-visited { background: #27ae60; color: #fff; }
+.status-badge.status-rumored { background: #d35400; color: #fff; }
+.status-badge.status-unknown { background: #444; color: #ccc; }
+
+.section-title {
+  font-size: 1rem;
+  color: #f1c40f;
+  margin: 16px 0 8px 0;
+}
+
+.lore-box, .player-lore p {
+  background: #202020;
+  border: 1px solid #333;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #ddd;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.player-journal-section textarea {
+  width: 100%;
+  height: 120px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #fff;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  margin-bottom: 10px;
+}
+
+.player-journal-section textarea:focus {
+  outline: none;
+  border-color: #f1c40f;
+}
+
+.btn-primary, .btn-secondary {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-primary { background: #f1c40f; color: #111; }
+.btn-primary:hover { background: #d4ac0d; }
+
+.btn-secondary { background: #2980b9; color: #fff; }
+.btn-secondary:hover { background: #1f618d; }
+
+.save-status-msg {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #2ecc71;
+  text-align: center;
+}
+
+.modal-divider {
+  border: none;
+  border-top: 1px solid #2c2c2c;
+  margin: 18px 0;
+}
+
+.gm-controls select {
+  width: 100%;
+  padding: 8px;
+  background: #222;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  margin: 6px 0 12px 0;
+}
+
+/* Calibration Drawer */
 .calibration-drawer {
-  display: none; /* Secret tool state */
+  display: none;
   position: fixed;
   top: 15px;
-  right: 15px;
+  left: 15px;
   z-index: 1000;
   background: rgba(20, 20, 20, 0.92);
   border: 1px solid #444;
@@ -76,88 +259,66 @@ polygon.hex-cell.hidden-border {
   backdrop-filter: blur(4px);
 }
 
-.calibration-drawer.visible {
-  display: block;
-}
+.calibration-drawer.visible { display: block; }
 
-.calibration-drawer h3 {
-  font-size: 1rem;
-  margin-bottom: 12px;
-  color: #f1c40f;
-}
-
-.control-group {
-  margin-bottom: 12px;
-}
-
-.control-group label {
-  display: block;
-  font-size: 0.85rem;
-  margin-bottom: 4px;
-}
-
-.control-group input[type="range"] {
-  width: 100%;
-}
-
-.control-group input[type="color"] {
-  width: 100%;
-  height: 36px;
-  border: 1px solid #444;
-  background: #222;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button#btn-export-config {
-  width: 100%;
-  padding: 8px;
-  background: #f1c40f;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button#btn-export-config:hover {
-  background: #d4ac0d;
-}
-
-/* Modal Window */
+/* Modal Window for PIN entry */
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
 }
 
-.modal.hidden {
-  display: none;
-}
+.modal.hidden { display: none; }
 
-.modal-content {
-  background: #1e1e1e;
-  border: 1px solid #333;
+.pin-modal-box {
+  background: #1a1a1a;
+  border: 1px solid #444;
   border-radius: 8px;
   padding: 24px;
-  width: 90%;
-  max-width: 500px;
-  position: relative;
+  width: 300px;
+  text-align: center;
 }
 
-.close-btn {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  background: none;
-  border: none;
-  color: #ccc;
-  font-size: 1.5rem;
-  cursor: pointer;
+.pin-modal-box h3 {
+  color: #f1c40f;
+  margin-bottom: 8px;
+}
+
+.pin-modal-box p {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin-bottom: 16px;
+}
+
+#pin-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 1.4rem;
+  letter-spacing: 8px;
+  text-align: center;
+  background: #0d0d0d;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.error-msg {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.error-msg.hidden { display: none; }
+
+.pin-modal-actions {
+  display: flex;
+  gap: 8px;
 }

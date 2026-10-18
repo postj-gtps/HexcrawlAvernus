@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <!-- Calibration Panel (Hidden by default; reveal via ?calibrate=true or ?view=gm) -->
+  <!-- Calibration Panel (Hidden by default; reveal via ?calibrate=true) -->
   <div id="calibration-panel" class="calibration-drawer">
     <h3>Grid Alignment Calibration</h3>
     <div class="control-group">
@@ -33,22 +33,46 @@
     <button id="btn-export-config">Log Final Config to Console</button>
   </div>
 
-  <!-- Interactive Map Stage -->
-  <div id="map-container" class="map-viewport">
-    <img id="map-image" src="assets/map-image.jpg" alt="Avernus Map">
-    <svg id="hex-svg-overlay" class="grid-overlay"></svg>
+  <!-- App Layout Wrapper -->
+  <div class="app-container">
+    
+    <!-- Left Column: Interactive Map Viewport -->
+    <div id="map-container" class="map-viewport">
+      <img id="map-image" src="assets/map-image.jpg" alt="Avernus Map">
+      <svg id="hex-svg-overlay" class="grid-overlay"></svg>
+    </div>
+
+    <!-- Right Column: Permanent Info & Journal Sidebar -->
+    <aside id="sidebar" class="sidebar-panel">
+      
+      <!-- Sidebar Header & GM PIN Lock Bar -->
+      <div class="sidebar-header">
+        <h2 id="sidebar-title">Campaign Journal</h2>
+        <button id="btn-gm-toggle" class="btn-gm-lock">
+          <span id="gm-lock-icon">🔒</span> <span id="gm-lock-text">Enter GM Mode</span>
+        </button>
+      </div>
+
+      <!-- Hex Details Content Area -->
+      <div id="sidebar-content" class="sidebar-body">
+        <div class="placeholder-notice">
+          <p>📍 <strong>Select a hex on the map</strong> to view location lore and record party journal notes.</p>
+        </div>
+      </div>
+
+    </aside>
   </div>
 
-  <!-- Shared Hex Information Modal -->
-  <div id="hex-modal" class="modal hidden">
-    <div class="modal-content">
-      <button id="modal-close" class="close-btn">&times;</button>
-      <h2 id="modal-hex-id">Hex Coordinate</h2>
-      <div id="modal-body">
-        <p class="status-badge" id="modal-status">Status: Unknown</p>
-        <div id="modal-content-details">
-          <!-- Populated by app.js / sheets-api.js -->
-        </div>
+  <!-- PIN Prompt Overlay Modal -->
+  <div id="pin-modal" class="modal hidden">
+    <div class="modal-content pin-modal-box">
+      <h3>Enter GM PIN</h3>
+      <p>Enter the 4-digit security code to unlock GM tools:</p>
+      <input type="password" id="pin-input" maxlength="4" placeholder="••••" autocomplete="off">
+      <div id="pin-error" class="error-msg hidden">Incorrect PIN. Try again.</div>
+      <div class="pin-modal-actions">
+        <button id="btn-pin-submit" class="btn-primary">Unlock</button>
+        <button id="btn-pin-cancel" class="btn-secondary">Cancel</button>
       </div>
     </div>
   </div>
