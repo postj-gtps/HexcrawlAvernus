@@ -6,11 +6,9 @@ const GM_PIN = "0326";
 let isGMModeActive = false;
 let currentSelectedHexId = null;
 
-// Initialize app controls
 function initApp() {
   setupGmToggle();
   
-  // Check if GM mode was requested via URL parameter
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("view") === "gm") {
     isGMModeActive = true;
@@ -18,9 +16,6 @@ function initApp() {
   }
 }
 
-/**
- * Configure GM PIN Lock Button & Modal Logic
- */
 function setupGmToggle() {
   const btnGmToggle = document.getElementById("btn-gm-toggle");
   const pinModal = document.getElementById("pin-modal");
@@ -66,9 +61,6 @@ function setupGmToggle() {
   }
 }
 
-/**
- * Updates UI styling based on current GM status
- */
 function updateGmUiState() {
   const btnGmToggle = document.getElementById("btn-gm-toggle");
   const lockIcon = document.getElementById("gm-lock-icon");
@@ -84,7 +76,6 @@ function updateGmUiState() {
     lockText.textContent = "Enter GM Mode";
   }
 
-  // Refresh sidebar display if a hex is selected
   if (currentSelectedHexId) {
     window.handleHexClick(currentSelectedHexId);
   }
@@ -98,23 +89,24 @@ function formatLoreText(text) {
 /**
  * Render selected Hex details inside the sidebar
  */
-window.handleHexClick = function(hexId) {
-  currentSelectedHexId = hexId;
+window.handleHexClick = function(rawHexId) {
+  const cleanHexId = String(rawHexId).toUpperCase();
+  currentSelectedHexId = cleanHexId;
+
   const sidebarContent = document.getElementById("sidebar-content");
   if (!sidebarContent) return;
 
-  const hexData = hexDataCache[hexId] || { content: "", status: "Unknown" };
-  const playerNote = playerNotesCache[hexId] || "";
+  const hexData = hexDataCache[cleanHexId] || { content: "", status: "Unknown" };
+  const playerNote = playerNotesCache[cleanHexId] || "";
   const currentStatus = hexData.status || "Unknown";
 
   let htmlContent = `
-    <h2 class="hex-title">Hex ${hexId} ${isGMModeActive ? "(GM View)" : ""}</h2>
+    <h2 class="hex-title">Hex ${cleanHexId} ${isGMModeActive ? "(GM View)" : ""}</h2>
     <span class="status-badge status-${currentStatus.toLowerCase()}">Status: ${currentStatus}</span>
   `;
 
   if (isGMModeActive) {
     // --- GM SIDEBAR INTERFACE ---
-    // Includes GM Status Controls, Master Key Lore from Sheets, and Party Notes
     htmlContent += `
       <div class="gm-controls">
         <label><strong>GM Status Override:</strong></label>
@@ -140,12 +132,11 @@ window.handleHexClick = function(hexId) {
     `;
   } else {
     // --- PLAYER SIDEBAR INTERFACE ---
-    // Strictly hides Master Lore. Displays party journal for reading/writing notes.
     htmlContent += `
       <div class="player-journal-section">
         <h3 class="section-title">Party Travel Journal</h3>
         <p class="info-text" style="font-size: 0.85rem; color: #aaa; margin-bottom: 12px;">
-          Record party discoveries, rumors, NPCs met, or encounters for Hex ${hexId}.
+          Record party discoveries, rumors, NPCs met, or encounters for Hex ${cleanHexId}.
         </p>
         <textarea id="player-journal-input" placeholder="Type notes, rumors, or discoveries here...">${playerNote}</textarea>
         <button id="btn-save-journal" class="btn-secondary">Save Journal Note</button>
@@ -155,7 +146,7 @@ window.handleHexClick = function(hexId) {
   }
 
   sidebarContent.innerHTML = htmlContent;
-  attachSidebarEventListeners(hexId);
+  attachSidebarEventListeners(cleanHexId);
 };
 
 function attachSidebarEventListeners(hexId) {
@@ -197,7 +188,6 @@ function attachSidebarEventListeners(hexId) {
   }
 }
 
-// Initialize on DOM load
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {

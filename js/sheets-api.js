@@ -60,21 +60,35 @@ async function loadSheetData() {
   if (SHEETS_CONFIG.appsScriptUrl) {
     try {
       const cacheBustUrl = `${SHEETS_CONFIG.appsScriptUrl}?t=${Date.now()}`;
-      console.log("[Sheets API] Fetching live data from Apps Script...");
-      
       const response = await fetch(cacheBustUrl, { redirect: "follow" });
+      
       if (response.ok) {
         const jsonData = await response.json();
 
         if (jsonData.hexes) {
-          hexDataCache = jsonData.hexes;
-          playerNotesCache = jsonData.playerNotes || {};
+          hexDataCache = {};
+          for (const k in jsonData.hexes) {
+            hexDataCache[k.toUpperCase()] = jsonData.hexes[k];
+          }
+
+          playerNotesCache = {};
+          if (jsonData.playerNotes) {
+            for (const k in jsonData.playerNotes) {
+              playerNotesCache[k.toUpperCase()] = jsonData.playerNotes[k];
+            }
+          }
         } else {
           hexDataCache = jsonData;
         }
 
-        console.log("[Sheets API] Hexes cached:", Object.keys(hexDataCache).length);
-        console.log("[Sheets API] Player notes cached:", playerNotesCache);
+        console.log("[Sheets API] Loaded hexes:", Object.keys(hexDataCache).length);
+        console.log("[Sheets API] Loaded player notes:", playerNotesCache);
+
+        // Refresh active hex sidebar if one is currently open
+        if (typeof currentSelectedHexId !== "undefined" && currentSelectedHexId && typeof window.handleHexClick === "function") {
+          window.handleHexClick(currentSelectedHexId);
+        }
+
         return hexDataCache;
       }
     } catch (err) {
@@ -138,7 +152,7 @@ async function apiSavePlayerNote(hexId, noteText) {
       body: payload
     });
 
-    console.log(`[Sheets API] Sent note for ${cleanHexId} to Google Sheets.`);
+    console.log(`[Sheets API] Saved note for ${cleanHexId} to Google Sheets.`);
     return { success: true };
   } catch (error) {
     console.error(`[Sheets API Error] Saving note for ${cleanHexId}:`, error);
@@ -170,7 +184,7 @@ async function apiUpdateHexStatus(hexId, newStatus) {
       body: payload
     });
 
-    console.log(`[Sheets API] Sent status update for ${cleanHexId} to Google Sheets.`);
+    console.log(`[Sheets API] Updated status for ${cleanHexId} to Google Sheets.`);
     return { success: true };
   } catch (error) {
     console.error(`[Sheets API Error] Updating status for ${cleanHexId}:`, error);
