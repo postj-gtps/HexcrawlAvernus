@@ -103,7 +103,7 @@ async function loadSheetData() {
         hexDataCache[hexId] = {
           hexId: hexId,
           content: rawContent,
-          status: rawContent ? "Visited" : "Unknown"
+          status: "Unknown"
         };
       }
     }
@@ -131,7 +131,6 @@ async function apiSavePlayerNote(hexId, noteText) {
       timestamp: new Date().toISOString()
     });
 
-    // Uses text/plain to prevent browser preflight CORS blocks
     await fetch(SHEETS_CONFIG.appsScriptUrl, {
       method: "POST",
       mode: "no-cors",
