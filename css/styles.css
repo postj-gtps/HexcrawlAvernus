@@ -58,7 +58,7 @@ polygon.hex-cell {
 
 /* Translucent Slate Gray for Unknown Status */
 polygon.hex-cell.status-fill-unknown {
-  fill: rgba(128, 128, 128, 0.28);
+  fill: rgba(128, 128, 128, 0.50);
 }
 
 polygon.hex-cell.status-fill-rumored {
