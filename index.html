@@ -8,20 +8,24 @@
 </head>
 <body>
 
-  <!-- Calibration Panel (Toggleable / GM Tooling) -->
+  <!-- Calibration Panel (Hidden by default; reveal via ?calibrate=true or ?view=gm) -->
   <div id="calibration-panel" class="calibration-drawer">
     <h3>Grid Alignment Calibration</h3>
     <div class="control-group">
-      <label for="input-radius">Hex Radius (px): <span id="val-radius">24</span></label>
-      <input type="range" id="input-radius" min="10" max="100" step="0.5" value="24">
+      <label for="input-radius">Hex Radius (px): <span id="val-radius">31</span></label>
+      <input type="range" id="input-radius" min="10" max="100" step="0.5" value="31">
     </div>
     <div class="control-group">
-      <label for="input-offset-x">Offset X (px): <span id="val-offset-x">35</span></label>
-      <input type="range" id="input-offset-x" min="0" max="200" step="1" value="35">
+      <label for="input-offset-x">Offset X (px): <span id="val-offset-x">75</span></label>
+      <input type="range" id="input-offset-x" min="0" max="200" step="1" value="75">
     </div>
     <div class="control-group">
-      <label for="input-offset-y">Offset Y (px): <span id="val-offset-y">35</span></label>
-      <input type="range" id="input-offset-y" min="0" max="200" step="1" value="35">
+      <label for="input-offset-y">Offset Y (px): <span id="val-offset-y">79</span></label>
+      <input type="range" id="input-offset-y" min="0" max="200" step="1" value="79">
+    </div>
+    <div class="control-group">
+      <label for="input-color">Border Color:</label>
+      <input type="color" id="input-color" value="#000000">
     </div>
     <div class="control-group">
       <label><input type="checkbox" id="toggle-borders" checked> Highlight Grid Borders</label>

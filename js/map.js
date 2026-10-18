@@ -6,10 +6,11 @@
 const GRID_CONFIG = {
   rows: 17,
   cols: 30,
-  radius: 24,        // Flat-topped radius (distance from center to corner)
-  offsetX: 35,       // Horizontal alignment shift in pixels
-  offsetY: 35,       // Vertical alignment shift in pixels
-  showBorders: true  // Default visual state for calibration
+  radius: 31,         // Calibrated radius[cite: 2]
+  offsetX: 75,        // Calibrated horizontal shift[cite: 2]
+  offsetY: 79,        // Calibrated vertical shift[cite: 2]
+  showBorders: true,
+  strokeColor: "#000000" // Calibrated black grid lines[cite: 2]
 };
 
 // Column Label Generator (A-Z, AA, AB, AC, AD for 30 columns)
@@ -29,7 +30,6 @@ function getColumnLabel(index) {
 function getFlatHexCorners(centerX, centerY, radius) {
   const corners = [];
   for (let i = 0; i < 6; i++) {
-    // Corner angles for flat-topped hex: 0°, 60°, 120°, 180°, 240°, 300°
     const angleRad = (Math.PI / 180) * (i * 60);
     const x = centerX + radius * Math.cos(angleRad);
     const y = centerY + radius * Math.sin(angleRad);
@@ -47,12 +47,10 @@ function renderHexGrid() {
 
   if (!img) return;
 
-  // Sync SVG overlay dimensions with image container
   svgContainer.setAttribute("viewBox", `0 0 ${img.naturalWidth || img.clientWidth} ${img.naturalHeight || img.clientHeight}`);
-  svgContainer.innerHTML = ""; // Clear existing grid
+  svgContainer.innerHTML = "";
 
   const r = GRID_CONFIG.radius;
-  // Flat-topped geometric spacing math:
   const horizontalSpacing = 1.5 * r;
   const verticalSpacing = Math.sqrt(3) * r;
 
@@ -63,25 +61,20 @@ function renderHexGrid() {
       const rowLabel = row + 1;
       const hexId = `${colLabel}${rowLabel}`;
 
-      // Calculate Center X and Y
       const centerX = GRID_CONFIG.offsetX + col * horizontalSpacing;
-      
-      // Stagger odd columns down by half the height of a hex
       const staggerY = (col % 2 === 1) ? (verticalSpacing / 2) : 0;
       const centerY = GRID_CONFIG.offsetY + row * verticalSpacing + staggerY;
 
-      // Calculate SVG polygon points
       const points = getFlatHexCorners(centerX, centerY, r);
 
-      // Create SVG Polygon Element
       const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       polygon.setAttribute("points", points);
-      polygon.setAttribute("class", GRID_CONFIG.showBorders ? "hex-cell active-border" : "hex-cell");
+      polygon.setAttribute("class", GRID_CONFIG.showBorders ? "hex-cell active-border" : "hex-cell hidden-border");
+      polygon.style.stroke = GRID_CONFIG.strokeColor;
       polygon.setAttribute("data-hex-id", hexId);
       polygon.setAttribute("data-row", row);
       polygon.setAttribute("data-col", col);
 
-      // Click Event Callback
       polygon.addEventListener("click", () => handleHexClick(hexId, col, row));
 
       svgContainer.appendChild(polygon);
@@ -103,12 +96,27 @@ function handleHexClick(hexId, col, row) {
 }
 
 /**
+ * Reveals calibration panel if ?calibrate=true or ?view=gm is in the URL
+ */
+function checkUrlModes() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isCalibrate = urlParams.get("calibrate") === "true";
+  const isGM = urlParams.get("view") === "gm";
+  
+  const panel = document.getElementById("calibration-panel");
+  if (panel && (isCalibrate || isGM)) {
+    panel.classList.add("visible");
+  }
+}
+
+/**
  * Attach Calibration Controls for live adjustment
  */
 function setupCalibrationControls() {
   const inputRadius = document.getElementById("input-radius");
   const inputOffsetX = document.getElementById("input-offset-x");
   const inputOffsetY = document.getElementById("input-offset-y");
+  const inputColor = document.getElementById("input-color");
   const toggleBorders = document.getElementById("toggle-borders");
   const btnExport = document.getElementById("btn-export-config");
 
@@ -130,6 +138,11 @@ function setupCalibrationControls() {
     renderHexGrid();
   });
 
+  inputColor.addEventListener("input", (e) => {
+    GRID_CONFIG.strokeColor = e.target.value;
+    renderHexGrid();
+  });
+
   toggleBorders.addEventListener("change", (e) => {
     GRID_CONFIG.showBorders = e.target.checked;
     renderHexGrid();
@@ -137,7 +150,7 @@ function setupCalibrationControls() {
 
   btnExport.addEventListener("click", () => {
     console.log("Calibrated Hex Configuration:", JSON.stringify(GRID_CONFIG, null, 2));
-    alert(`Configuration exported to Browser Console! Radius: ${GRID_CONFIG.radius}, OffsetX: ${GRID_CONFIG.offsetX}, OffsetY: ${GRID_CONFIG.offsetY}`);
+    alert(`Configuration exported to Console! Radius: ${GRID_CONFIG.radius}, OffsetX: ${GRID_CONFIG.offsetX}, OffsetY: ${GRID_CONFIG.offsetY}, Color: ${GRID_CONFIG.strokeColor}`);
   });
 
   // Modal Close Listener
@@ -149,6 +162,7 @@ function setupCalibrationControls() {
 // Initialize on image load
 window.addEventListener("DOMContentLoaded", () => {
   const mapImg = document.getElementById("map-image");
+  checkUrlModes();
   setupCalibrationControls();
 
   if (mapImg.complete) {
