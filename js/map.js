@@ -34,7 +34,7 @@ function getHexPoints(centerX, centerY, r) {
   return points.join(" ");
 }
 
-function renderHexGrid() {
+window.renderHexGrid = function() {
   const svgOverlay = document.getElementById("hex-svg-overlay");
   const mapImage = document.getElementById("map-image");
   if (!svgOverlay || !mapImage) return;
@@ -51,6 +51,9 @@ function renderHexGrid() {
       const rowLabel = row + 1;
       const hexId = `${colLabel}${rowLabel}`.toUpperCase();
 
+      const hexData = (typeof hexDataCache !== "undefined" && hexDataCache[hexId]) ? hexDataCache[hexId] : { status: "Unknown" };
+      const currentStatus = (hexData.status || "Unknown").toLowerCase();
+
       // Stagger odd rows for hex grid alignment
       const xOffset = (row % 2 === 1) ? horizDist / 2 : 0;
       const cx = GRID_CONFIG.offsetX + col * horizDist + xOffset;
@@ -58,7 +61,7 @@ function renderHexGrid() {
 
       const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       polygon.setAttribute("points", getHexPoints(cx, cy, r));
-      polygon.setAttribute("class", `hex-cell ${GRID_CONFIG.showBorders ? 'active-border' : 'hidden-border'}`);
+      polygon.setAttribute("class", `hex-cell status-fill-${currentStatus} ${GRID_CONFIG.showBorders ? 'active-border' : 'hidden-border'}`);
       polygon.setAttribute("data-hex-id", hexId);
       polygon.style.stroke = GRID_CONFIG.borderColor;
 
@@ -71,7 +74,7 @@ function renderHexGrid() {
       svgOverlay.appendChild(polygon);
     }
   }
-}
+};
 
 function initCalibrationUI() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -104,29 +107,29 @@ function initCalibrationUI() {
   inputRadius.addEventListener("input", (e) => {
     GRID_CONFIG.radius = parseFloat(e.target.value);
     document.getElementById("val-radius").textContent = GRID_CONFIG.radius;
-    renderHexGrid();
+    window.renderHexGrid();
   });
 
   inputOffsetX.addEventListener("input", (e) => {
     GRID_CONFIG.offsetX = parseFloat(e.target.value);
     document.getElementById("val-offset-x").textContent = GRID_CONFIG.offsetX;
-    renderHexGrid();
+    window.renderHexGrid();
   });
 
   inputOffsetY.addEventListener("input", (e) => {
     GRID_CONFIG.offsetY = parseFloat(e.target.value);
     document.getElementById("val-offset-y").textContent = GRID_CONFIG.offsetY;
-    renderHexGrid();
+    window.renderHexGrid();
   });
 
   inputColor.addEventListener("input", (e) => {
     GRID_CONFIG.borderColor = e.target.value;
-    renderHexGrid();
+    window.renderHexGrid();
   });
 
   toggleBorders.addEventListener("change", (e) => {
     GRID_CONFIG.showBorders = e.target.checked;
-    renderHexGrid();
+    window.renderHexGrid();
   });
 
   if (btnExport) {
@@ -139,7 +142,7 @@ function initCalibrationUI() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  renderHexGrid();
+  window.renderHexGrid();
   initCalibrationUI();
-  window.addEventListener("resize", renderHexGrid);
+  window.addEventListener("resize", window.renderHexGrid);
 });

@@ -46,19 +46,34 @@ body {
   pointer-events: none;
 }
 
-/* SVG Hex Shapes */
+/* SVG Hex Shapes & Translucent Status Shading */
 polygon.hex-cell {
   pointer-events: auto;
-  fill: rgba(0, 0, 0, 0.01);
   stroke: #000000;
   stroke-opacity: 0.75;
   stroke-width: 1.5px;
   cursor: pointer;
-  transition: fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+  transition: fill 0.25s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+polygon.hex-cell.status-fill-unknown {
+  fill: rgba(0, 0, 0, 0);
+}
+
+polygon.hex-cell.status-fill-rumored {
+  fill: rgba(255, 193, 7, 0.28);
+}
+
+polygon.hex-cell.status-fill-traveled {
+  fill: rgba(33, 150, 243, 0.28);
+}
+
+polygon.hex-cell.status-fill-visited {
+  fill: rgba(76, 175, 80, 0.35);
 }
 
 polygon.hex-cell:hover {
-  fill: rgba(255, 215, 0, 0.35);
+  fill: rgba(255, 255, 255, 0.35) !important;
   stroke: #ffd700 !important;
   stroke-opacity: 1 !important;
   stroke-width: 2.5px !important;
@@ -159,13 +174,12 @@ polygon.hex-cell.hidden-border {
   font-weight: bold;
   margin-bottom: 16px;
   text-transform: uppercase;
-  background: #333;
-  color: #aaa;
 }
 
-.status-badge.status-visited { background: #27ae60; color: #fff; }
-.status-badge.status-rumored { background: #d35400; color: #fff; }
 .status-badge.status-unknown { background: #444; color: #ccc; }
+.status-badge.status-rumored { background: #d35400; color: #fff; }
+.status-badge.status-traveled { background: #2980b9; color: #fff; }
+.status-badge.status-visited { background: #27ae60; color: #fff; }
 
 .section-title {
   font-size: 1rem;

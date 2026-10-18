@@ -89,6 +89,11 @@ async function loadSheetData() {
           window.handleHexClick(currentSelectedHexId);
         }
 
+        // Re-render map grid so translucent status colors display automatically
+        if (typeof window.renderHexGrid === "function") {
+          window.renderHexGrid();
+        }
+
         return hexDataCache;
       }
     } catch (err) {
@@ -121,6 +126,11 @@ async function loadSheetData() {
         };
       }
     }
+
+    if (typeof window.renderHexGrid === "function") {
+      window.renderHexGrid();
+    }
+
     return hexDataCache;
 
   } catch (error) {
@@ -164,6 +174,8 @@ async function apiUpdateHexStatus(hexId, newStatus) {
   const cleanHexId = String(hexId).toUpperCase();
   if (hexDataCache[cleanHexId]) {
     hexDataCache[cleanHexId].status = newStatus;
+  } else {
+    hexDataCache[cleanHexId] = { hexId: cleanHexId, content: "", status: newStatus };
   }
 
   if (!SHEETS_CONFIG.appsScriptUrl) {

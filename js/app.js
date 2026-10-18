@@ -110,7 +110,8 @@ window.handleHexClick = function(rawHexId) {
       <select id="hex-status-select">
         <option value="Unknown" ${currentStatus === "Unknown" ? "selected" : ""}>0: Unknown</option>
         <option value="Rumored" ${currentStatus === "Rumored" ? "selected" : ""}>1: Rumored</option>
-        <option value="Visited" ${currentStatus === "Visited" ? "selected" : ""}>2: Visited</option>
+        <option value="Traveled" ${currentStatus === "Traveled" ? "selected" : ""}>2: Traveled</option>
+        <option value="Visited" ${currentStatus === "Visited" ? "selected" : ""}>3: Visited</option>
       </select>
       <button id="btn-save-status" class="btn-primary">Update Status</button>
     </div>
@@ -155,6 +156,11 @@ function attachSidebarEventListeners(hexId) {
       btnSaveStatus.textContent = "Updating...";
 
       await apiUpdateHexStatus(hexId, newStatus);
+
+      // Re-render map grid immediately so translucent fill updates
+      if (typeof window.renderHexGrid === "function") {
+        window.renderHexGrid();
+      }
 
       btnSaveStatus.disabled = false;
       btnSaveStatus.textContent = "Updated!";
