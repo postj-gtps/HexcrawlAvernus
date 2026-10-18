@@ -1,16 +1,15 @@
 /**
  * Interactive Flat-Topped Hex Grid Overlay Math Engine
- * Grid dimensions: 17 Rows x 30 Columns (Matching sheet configuration)
  */
 
 const GRID_CONFIG = {
   rows: 17,
   cols: 30,
-  radius: 31,         // Calibrated radius[cite: 2]
-  offsetX: 75,        // Calibrated horizontal shift[cite: 2]
-  offsetY: 79,        // Calibrated vertical shift[cite: 2]
+  radius: 31,
+  offsetX: 75,
+  offsetY: 79,
   showBorders: true,
-  strokeColor: "#000000" // Calibrated black grid lines[cite: 2]
+  strokeColor: "#000000"
 };
 
 // Column Label Generator (A-Z, AA, AB, AC, AD for 30 columns)
@@ -45,7 +44,7 @@ function renderHexGrid() {
   const svgContainer = document.getElementById("hex-svg-overlay");
   const img = document.getElementById("map-image");
 
-  if (!img) return;
+  if (!img || !svgContainer) return;
 
   svgContainer.setAttribute("viewBox", `0 0 ${img.naturalWidth || img.clientWidth} ${img.naturalHeight || img.clientHeight}`);
   svgContainer.innerHTML = "";
@@ -75,7 +74,14 @@ function renderHexGrid() {
       polygon.setAttribute("data-row", row);
       polygon.setAttribute("data-col", col);
 
-      polygon.addEventListener("click", () => handleHexClick(hexId, col, row));
+      // Delegate click handling to window.handleHexClick defined in app.js
+      polygon.addEventListener("click", () => {
+        if (typeof window.handleHexClick === "function") {
+          window.handleHexClick(hexId, col, row);
+        } else {
+          console.warn(`Click handler not loaded yet for Hex ${hexId}`);
+        }
+      });
 
       svgContainer.appendChild(polygon);
     }
@@ -83,20 +89,7 @@ function renderHexGrid() {
 }
 
 /**
- * Click Handler — Triggered when a player or GM selects a hex
- */
-function handleHexClick(hexId, col, row) {
-  console.log(`Clicked Hex: ${hexId} (Col: ${col}, Row: ${row})`);
-  
-  const modal = document.getElementById("hex-modal");
-  const modalTitle = document.getElementById("modal-hex-id");
-  
-  if (modalTitle) modalTitle.textContent = `Hex ${hexId}`;
-  if (modal) modal.classList.remove("hidden");
-}
-
-/**
- * Reveals calibration panel if ?calibrate=true or ?view=gm is in the URL
+ * Reveals calibration panel if ?calibrate=true or ?view=gm is in URL
  */
 function checkUrlModes() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -110,7 +103,7 @@ function checkUrlModes() {
 }
 
 /**
- * Attach Calibration Controls for live adjustment
+ * Live Calibration Controls
  */
 function setupCalibrationControls() {
   const inputRadius = document.getElementById("input-radius");
@@ -119,6 +112,8 @@ function setupCalibrationControls() {
   const inputColor = document.getElementById("input-color");
   const toggleBorders = document.getElementById("toggle-borders");
   const btnExport = document.getElementById("btn-export-config");
+
+  if (!inputRadius) return;
 
   inputRadius.addEventListener("input", (e) => {
     GRID_CONFIG.radius = parseFloat(e.target.value);
@@ -153,21 +148,31 @@ function setupCalibrationControls() {
     alert(`Configuration exported to Console! Radius: ${GRID_CONFIG.radius}, OffsetX: ${GRID_CONFIG.offsetX}, OffsetY: ${GRID_CONFIG.offsetY}, Color: ${GRID_CONFIG.strokeColor}`);
   });
 
-  // Modal Close Listener
-  document.getElementById("modal-close").addEventListener("click", () => {
-    document.getElementById("hex-modal").classList.add("hidden");
-  });
+  const modalClose = document.getElementById("modal-close");
+  if (modalClose) {
+    modalClose.addEventListener("click", () => {
+      document.getElementById("hex-modal").classList.add("hidden");
+    });
+  }
 }
 
-// Initialize on image load
-window.addEventListener("DOMContentLoaded", () => {
+// Initializing Grid Engine
+function initMapEngine() {
   const mapImg = document.getElementById("map-image");
   checkUrlModes();
   setupCalibrationControls();
 
-  if (mapImg.complete) {
-    renderHexGrid();
-  } else {
-    mapImg.addEventListener("load", renderHexGrid);
+  if (mapImg) {
+    if (mapImg.complete) {
+      renderHexGrid();
+    } else {
+      mapImg.addEventListener("load", renderHexGrid);
+    }
   }
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initMapEngine);
+} else {
+  initMapEngine();
+}
