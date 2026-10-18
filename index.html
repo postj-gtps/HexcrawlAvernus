@@ -1,1 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avernus Interactive Hexcrawl Map</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
 
+  <!-- Calibration Panel (Toggleable / GM Tooling) -->
+  <div id="calibration-panel" class="calibration-drawer">
+    <h3>Grid Alignment Calibration</h3>
+    <div class="control-group">
+      <label for="input-radius">Hex Radius (px): <span id="val-radius">24</span></label>
+      <input type="range" id="input-radius" min="10" max="100" step="0.5" value="24">
+    </div>
+    <div class="control-group">
+      <label for="input-offset-x">Offset X (px): <span id="val-offset-x">35</span></label>
+      <input type="range" id="input-offset-x" min="0" max="200" step="1" value="35">
+    </div>
+    <div class="control-group">
+      <label for="input-offset-y">Offset Y (px): <span id="val-offset-y">35</span></label>
+      <input type="range" id="input-offset-y" min="0" max="200" step="1" value="35">
+    </div>
+    <div class="control-group">
+      <label><input type="checkbox" id="toggle-borders" checked> Highlight Grid Borders</label>
+    </div>
+    <button id="btn-export-config">Log Final Config to Console</button>
+  </div>
+
+  <!-- Interactive Map Stage -->
+  <div id="map-container" class="map-viewport">
+    <img id="map-image" src="assets/map-image.jpg" alt="Avernus Map">
+    <svg id="hex-svg-overlay" class="grid-overlay"></svg>
+  </div>
+
+  <!-- Shared Hex Information Modal -->
+  <div id="hex-modal" class="modal hidden">
+    <div class="modal-content">
+      <button id="modal-close" class="close-btn">&times;</button>
+      <h2 id="modal-hex-id">Hex Coordinate</h2>
+      <div id="modal-body">
+        <p class="status-badge" id="modal-status">Status: Unknown</p>
+        <div id="modal-content-details">
+          <!-- Populated by app.js / sheets-api.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/map.js"></script>
+</body>
+</html>

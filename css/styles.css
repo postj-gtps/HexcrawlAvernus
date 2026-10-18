@@ -1,1 +1,143 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Map Viewport & Container */
+.map-viewport {
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+}
+
+#map-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Let pointer events fall through to polygons */
+}
+
+/* SVG Hex Shapes */
+polygon.hex-cell {
+  pointer-events: auto;
+  fill: rgba(0, 0, 0, 0.01); /* Nearly transparent, required for click handling */
+  stroke: rgba(255, 215, 0, 0.35); /* Soft yellow default stroke */
+  stroke-width: 1px;
+  cursor: pointer;
+  transition: fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+polygon.hex-cell:hover {
+  fill: rgba(255, 215, 0, 0.25);
+  stroke: #ffd700;
+  stroke-width: 2.5px;
+}
+
+polygon.hex-cell.active-border {
+  stroke: rgba(255, 215, 0, 0.6);
+}
+
+/* Calibration Control Panel */
+.calibration-drawer {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1000;
+  background: rgba(20, 20, 20, 0.92);
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 16px;
+  width: 280px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.calibration-drawer h3 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+  color: #f1c40f;
+}
+
+.control-group {
+  margin-bottom: 12px;
+}
+
+.control-group label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.control-group input[type="range"] {
+  width: 100%;
+}
+
+button#btn-export-config {
+  width: 100%;
+  padding: 8px;
+  background: #f1c40f;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button#btn-export-config:hover {
+  background: #d4ac0d;
+}
+
+/* Modal Window */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
