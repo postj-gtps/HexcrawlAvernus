@@ -58,19 +58,19 @@ polygon.hex-cell {
 
 /* Translucent Slate Gray for Unknown Status */
 polygon.hex-cell.status-fill-unknown {
-  fill: rgba(128, 128, 128, 0.50);
+  fill: rgba(128, 128, 128, 0.75);
 }
 
 polygon.hex-cell.status-fill-rumored {
-  fill: rgba(255, 193, 7, 0.28);
+  fill: rgba(255, 193, 7, 0.5);
 }
 
 polygon.hex-cell.status-fill-traveled {
-  fill: rgba(33, 150, 243, 0.28);
+  fill: rgba(33, 150, 243, 0.5);
 }
 
 polygon.hex-cell.status-fill-visited {
-  fill: rgba(76, 175, 80, 0.35);
+  fill: rgba(76, 175, 80, 0.5);
 }
 
 polygon.hex-cell:hover {
