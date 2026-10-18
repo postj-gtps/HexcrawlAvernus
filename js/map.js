@@ -5,9 +5,9 @@
 const GRID_CONFIG = {
   rows: 17,
   cols: 30,
-  radius: 31,          // Restored from calibration settings
-  offsetX: 75,         // Restored from calibration settings
-  offsetY: 79,         // Restored from calibration settings
+  radius: 27.5,          // Restored from calibration settings
+  offsetX: 70,         // Restored from calibration settings
+  offsetY: 154,         // Restored from calibration settings
   borderColor: "#000000",
   showBorders: true
 };
