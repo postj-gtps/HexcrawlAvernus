@@ -3,10 +3,10 @@
  */
 
 const SHEETS_CONFIG = {
-  // Published CSV URL for the "Hexcrawl in a reconfiguration" tab
+  // Published CSV fallback URL
   publishedCsvUrl: "https://docs.google.com/spreadsheets/d/1EGECGE82Uzswp8M1FsloOzQoEIrlRN-_u1ocoIDVu4o/export?format=csv&gid=540164446",
   
-  // Deployed Google Apps Script Web App Endpoint for POST requests
+  // Apps Script Web App Endpoint (Handles both GET reads and POST writes)
   appsScriptUrl: "https://script.google.com/macros/s/AKfycbxzZ-GBtvKvFbj_zKtxHMG8uFVmnf53KghDkXyjIIP0bYZLYXd9jgokmG5iqHvnLhk_/exec"
 };
 
@@ -15,7 +15,7 @@ let hexDataCache = {};
 let playerNotesCache = {};
 
 /**
- * Robust CSV parser handling multi-line strings, quoted fields, and embedded commas
+ * Robust CSV parser fallback
  */
 function parseCSV(text) {
   const result = [];
@@ -30,7 +30,7 @@ function parseCSV(text) {
     if (inQuotes) {
       if (c === '"' && next === '"') {
         field += '"';
-        i++; // skip escaped quote
+        i++;
       } else if (c === '"') {
         inQuotes = false;
       } else {
@@ -43,7 +43,7 @@ function parseCSV(text) {
         row.push(field.trim());
         field = '';
       } else if (c === '\r') {
-        // skip carriage return
+        // skip
       } else if (c === '\n') {
         row.push(field.trim());
         result.push(row);
@@ -62,20 +62,45 @@ function parseCSV(text) {
 }
 
 /**
- * Fetches the published Google Sheet CSV and populates hexDataCache keyed by Hex ID (e.g., 'A1', 'B2', 'AC17')
+ * Main Data Loader — Tries Apps Script doGet JSON endpoint first, falls back to CSV
  */
 async function loadSheetData() {
-  if (!SHEETS_CONFIG.publishedCsvUrl) {
-    console.warn("Google Sheets CSV URL is missing.");
-    return hexDataCache;
+  console.log("[Sheets API] Initiating data load...");
+
+  // Primary Approach: Fetch directly from Apps Script Web App (doGet)
+  if (SHEETS_CONFIG.appsScriptUrl) {
+    try {
+      console.log("[Sheets API] Fetching from Apps Script Web App...");
+      const response = await fetch(SHEETS_CONFIG.appsScriptUrl, { redirect: "follow" });
+      
+      if (response.ok) {
+        const jsonData = await response.json();
+        console.log("[Sheets API] Received raw JSON from Apps Script:", jsonData);
+
+        // Populate cache
+        hexDataCache = jsonData;
+        console.log("Successfully cached Google Sheets hex data:", Object.keys(hexDataCache).length, "hexes");
+        return hexDataCache;
+      } else {
+        console.warn(`[Sheets API] Apps Script returned HTTP ${response.status}. Attempting CSV fallback...`);
+      }
+    } catch (err) {
+      console.warn("[Sheets API] Apps Script fetch failed/blocked. Attempting CSV fallback...", err);
+    }
   }
 
+  // Fallback Approach: Fetch published CSV stream
   try {
+    console.log("[Sheets API] Fetching CSV fallback stream...");
     const response = await fetch(SHEETS_CONFIG.publishedCsvUrl);
     const csvText = await response.text();
-    const rows = parseCSV(csvText);
 
-    // Map the 17x30 matrix cells to coordinate IDs
+    if (csvText.trim().startsWith("<!DOCTYPE") || csvText.trim().startsWith("<html")) {
+      console.error("[Sheets API Error] Google returned HTML login page. Check sheet link permissions or Publish to Web!");
+      return hexDataCache;
+    }
+
+    const rows = parseCSV(csvText);
     for (let r = 0; r < rows.length && r < GRID_CONFIG.rows; r++) {
       for (let c = 0; c < rows[r].length && c < GRID_CONFIG.cols; c++) {
         const colLabel = getColumnLabel(c);
@@ -90,16 +115,17 @@ async function loadSheetData() {
         };
       }
     }
-    console.log("Successfully cached Google Sheets hex data:", Object.keys(hexDataCache).length, "hexes");
+    console.log("Successfully cached Google Sheets hex data via CSV fallback:", Object.keys(hexDataCache).length, "hexes");
     return hexDataCache;
+
   } catch (error) {
-    console.error("Error loading Google Sheets CSV:", error);
+    console.error("[Sheets API Error] Failed to load hex data from both JSON and CSV endpoints:", error);
     return hexDataCache;
   }
 }
 
 /**
- * Sends a player note update to Google Sheets via Google Apps Script
+ * Saves a player note update to Google Sheets via Apps Script POST
  */
 async function apiSavePlayerNote(hexId, noteText) {
   playerNotesCache[hexId] = noteText;
