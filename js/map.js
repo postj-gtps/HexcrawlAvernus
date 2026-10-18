@@ -1,18 +1,17 @@
 /**
- * Interactive Flat-Topped Hex Grid Overlay Math Engine
+ * Interactive Hex Grid Renderer & Calibration Engine
  */
 
 const GRID_CONFIG = {
   rows: 17,
   cols: 30,
-  radius: 31,
-  offsetX: 75,
-  offsetY: 79,
-  showBorders: true,
-  strokeColor: "#000000"
+  radius: 31,          // Restored from calibration settings
+  offsetX: 75,         // Restored from calibration settings
+  offsetY: 79,         // Restored from calibration settings
+  borderColor: "#000000",
+  showBorders: true
 };
 
-// Column Label Generator (A-Z, AA, AB, AC, AD for 30 columns)
 function getColumnLabel(index) {
   let label = "";
   let i = index;
@@ -23,89 +22,66 @@ function getColumnLabel(index) {
   return label;
 }
 
-/**
- * Calculates the 6 corner points of a flat-topped hexagon
- */
-function getFlatHexCorners(centerX, centerY, radius) {
-  const corners = [];
+// Calculates pointy-topped hex polygon coordinates
+function getHexPoints(centerX, centerY, r) {
+  const points = [];
   for (let i = 0; i < 6; i++) {
-    const angleRad = (Math.PI / 180) * (i * 60);
-    const x = centerX + radius * Math.cos(angleRad);
-    const y = centerY + radius * Math.sin(angleRad);
-    corners.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+    const angleRad = (Math.PI / 180) * (60 * i - 30);
+    const x = centerX + r * Math.cos(angleRad);
+    const y = centerY + r * Math.sin(angleRad);
+    points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
   }
-  return corners.join(" ");
+  return points.join(" ");
 }
 
-/**
- * Main function to generate the SVG hex overlay
- */
 function renderHexGrid() {
-  const svgContainer = document.getElementById("hex-svg-overlay");
-  const img = document.getElementById("map-image");
+  const svgOverlay = document.getElementById("hex-svg-overlay");
+  const mapImage = document.getElementById("map-image");
+  if (!svgOverlay || !mapImage) return;
 
-  if (!img || !svgContainer) return;
+  svgOverlay.innerHTML = "";
 
-  svgContainer.setAttribute("viewBox", `0 0 ${img.naturalWidth || img.clientWidth} ${img.naturalHeight || img.clientHeight}`);
-  svgContainer.innerHTML = "";
+  const r = parseFloat(GRID_CONFIG.radius);
+  const horizDist = Math.sqrt(3) * r;
+  const vertDist = 1.5 * r;
 
-  const r = GRID_CONFIG.radius;
-  const horizontalSpacing = 1.5 * r;
-  const verticalSpacing = Math.sqrt(3) * r;
-
-  for (let col = 0; col < GRID_CONFIG.cols; col++) {
-    const colLabel = getColumnLabel(col);
-
-    for (let row = 0; row < GRID_CONFIG.rows; row++) {
+  for (let row = 0; row < GRID_CONFIG.rows; row++) {
+    for (let col = 0; col < GRID_CONFIG.cols; col++) {
+      const colLabel = getColumnLabel(col);
       const rowLabel = row + 1;
-      const hexId = `${colLabel}${rowLabel}`;
+      const hexId = `${colLabel}${rowLabel}`.toUpperCase();
 
-      const centerX = GRID_CONFIG.offsetX + col * horizontalSpacing;
-      const staggerY = (col % 2 === 1) ? (verticalSpacing / 2) : 0;
-      const centerY = GRID_CONFIG.offsetY + row * verticalSpacing + staggerY;
-
-      const points = getFlatHexCorners(centerX, centerY, r);
+      // Stagger odd rows for hex grid alignment
+      const xOffset = (row % 2 === 1) ? horizDist / 2 : 0;
+      const cx = GRID_CONFIG.offsetX + col * horizDist + xOffset;
+      const cy = GRID_CONFIG.offsetY + row * vertDist;
 
       const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      polygon.setAttribute("points", points);
-      polygon.setAttribute("class", GRID_CONFIG.showBorders ? "hex-cell active-border" : "hex-cell hidden-border");
-      polygon.style.stroke = GRID_CONFIG.strokeColor;
+      polygon.setAttribute("points", getHexPoints(cx, cy, r));
+      polygon.setAttribute("class", `hex-cell ${GRID_CONFIG.showBorders ? 'active-border' : 'hidden-border'}`);
       polygon.setAttribute("data-hex-id", hexId);
-      polygon.setAttribute("data-row", row);
-      polygon.setAttribute("data-col", col);
+      polygon.style.stroke = GRID_CONFIG.borderColor;
 
-      // Delegate click handling to window.handleHexClick defined in app.js
       polygon.addEventListener("click", () => {
         if (typeof window.handleHexClick === "function") {
-          window.handleHexClick(hexId, col, row);
-        } else {
-          console.warn(`Click handler not loaded yet for Hex ${hexId}`);
+          window.handleHexClick(hexId);
         }
       });
 
-      svgContainer.appendChild(polygon);
+      svgOverlay.appendChild(polygon);
     }
   }
 }
 
-/**
- * Reveals calibration panel if ?calibrate=true or ?view=gm is in URL
- */
-function checkUrlModes() {
+function initCalibrationUI() {
   const urlParams = new URLSearchParams(window.location.search);
-  const isCalibrate = urlParams.get("calibrate") === "true";
-  const isGM = urlParams.get("view") === "gm";
-  
-  const panel = document.getElementById("calibration-panel");
-  if (panel && (isCalibrate || isGM)) {
-    panel.classList.add("visible");
-  }
-}
+  const isCalibrating = urlParams.get("calibrate") === "true";
+  const calPanel = document.getElementById("calibration-panel");
 
-/**
- * Live Calibration Controls
- */
-function setupCalibrationControls() {
+  if (isCalibrating && calPanel) {
+    calPanel.classList.add("visible");
+  }
+
   const inputRadius = document.getElementById("input-radius");
   const inputOffsetX = document.getElementById("input-offset-x");
   const inputOffsetY = document.getElementById("input-offset-y");
@@ -114,6 +90,16 @@ function setupCalibrationControls() {
   const btnExport = document.getElementById("btn-export-config");
 
   if (!inputRadius) return;
+
+  inputRadius.value = GRID_CONFIG.radius;
+  inputOffsetX.value = GRID_CONFIG.offsetX;
+  inputOffsetY.value = GRID_CONFIG.offsetY;
+  inputColor.value = GRID_CONFIG.borderColor;
+  toggleBorders.checked = GRID_CONFIG.showBorders;
+
+  document.getElementById("val-radius").textContent = GRID_CONFIG.radius;
+  document.getElementById("val-offset-x").textContent = GRID_CONFIG.offsetX;
+  document.getElementById("val-offset-y").textContent = GRID_CONFIG.offsetY;
 
   inputRadius.addEventListener("input", (e) => {
     GRID_CONFIG.radius = parseFloat(e.target.value);
@@ -134,7 +120,7 @@ function setupCalibrationControls() {
   });
 
   inputColor.addEventListener("input", (e) => {
-    GRID_CONFIG.strokeColor = e.target.value;
+    GRID_CONFIG.borderColor = e.target.value;
     renderHexGrid();
   });
 
@@ -143,36 +129,17 @@ function setupCalibrationControls() {
     renderHexGrid();
   });
 
-  btnExport.addEventListener("click", () => {
-    console.log("Calibrated Hex Configuration:", JSON.stringify(GRID_CONFIG, null, 2));
-    alert(`Configuration exported to Console! Radius: ${GRID_CONFIG.radius}, OffsetX: ${GRID_CONFIG.offsetX}, OffsetY: ${GRID_CONFIG.offsetY}, Color: ${GRID_CONFIG.strokeColor}`);
-  });
-
-  const modalClose = document.getElementById("modal-close");
-  if (modalClose) {
-    modalClose.addEventListener("click", () => {
-      document.getElementById("hex-modal").classList.add("hidden");
+  if (btnExport) {
+    btnExport.addEventListener("click", () => {
+      const exportStr = `Configuration exported to Console! Radius: ${GRID_CONFIG.radius}, OffsetX: ${GRID_CONFIG.offsetX}, OffsetY: ${GRID_CONFIG.offsetY}, Color: ${GRID_CONFIG.borderColor}`;
+      console.log(exportStr);
+      alert(exportStr);
     });
   }
 }
 
-// Initializing Grid Engine
-function initMapEngine() {
-  const mapImg = document.getElementById("map-image");
-  checkUrlModes();
-  setupCalibrationControls();
-
-  if (mapImg) {
-    if (mapImg.complete) {
-      renderHexGrid();
-    } else {
-      mapImg.addEventListener("load", renderHexGrid);
-    }
-  }
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initMapEngine);
-} else {
-  initMapEngine();
-}
+document.addEventListener("DOMContentLoaded", () => {
+  renderHexGrid();
+  initCalibrationUI();
+  window.addEventListener("resize", renderHexGrid);
+});
