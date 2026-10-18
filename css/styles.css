@@ -56,8 +56,9 @@ polygon.hex-cell {
   transition: fill 0.25s ease, stroke 0.15s ease, stroke-width 0.15s ease;
 }
 
+/* Translucent Slate Gray for Unknown Status */
 polygon.hex-cell.status-fill-unknown {
-  fill: rgba(0, 0, 0, 0);
+  fill: rgba(128, 128, 128, 0.28);
 }
 
 polygon.hex-cell.status-fill-rumored {
@@ -297,42 +298,3 @@ polygon.hex-cell.hidden-border {
   border-radius: 8px;
   padding: 24px;
   width: 300px;
-  text-align: center;
-}
-
-.pin-modal-box h3 {
-  color: #f1c40f;
-  margin-bottom: 8px;
-}
-
-.pin-modal-box p {
-  font-size: 0.85rem;
-  color: #aaa;
-  margin-bottom: 16px;
-}
-
-#pin-input {
-  width: 100%;
-  padding: 10px;
-  font-size: 1.4rem;
-  letter-spacing: 8px;
-  text-align: center;
-  background: #0d0d0d;
-  border: 1px solid #444;
-  color: #fff;
-  border-radius: 4px;
-  margin-bottom: 12px;
-}
-
-.error-msg {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  margin-bottom: 12px;
-}
-
-.error-msg.hidden { display: none; }
-
-.pin-modal-actions {
-  display: flex;
-  gap: 8px;
-}
